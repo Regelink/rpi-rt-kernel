@@ -4,13 +4,18 @@ ENV TZ=Europe/Copenhagen
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 ARG kernelVersion="5"
-ARG majorRevision="10"
-ARG minorRevision="87"
-ARG patchNumber="59"
+#ARG majorRevision="10"
+#ARG minorRevision="87"
+#ARG patchNumber="59"
+ARG majorRevision="15"
+ARG minorRevision="32"
+ARG patchNumber="39"
 ARG older="older/"
 #ARG older=""
-ARG uploadDate="2021-11-08"
-ARG fileDate="2021-10-30"
+#ARG uploadDate="2021-11-08"
+#ARG fileDate="2021-10-30"
+ARG uploadDate="2022-04-07"
+ARG fileDate="2022-04-04"
 ARG architecture="arm64"
 ARG fullOrLite="lite"
 
