@@ -18,6 +18,8 @@ ARG uploadDate="2022-04-07"
 ARG fileDate="2022-04-04"
 ARG architecture="arm64"
 ARG fullOrLite="lite"
+#ARG archiveType=".zip"
+ARG archiveType=".img.xz"
 
 #
 # Don't change stuff below unless something is broken
@@ -25,7 +27,7 @@ ARG fullOrLite="lite"
 ARG kernelBranch="rpi-${kernelVersion}.${majorRevision}.y"
 ARG patchVersion="${kernelVersion}.${majorRevision}.${minorRevision}-rt${patchNumber}"
 ARG patchURL="https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/${kernelVersion}.${majorRevision}/${older}patch-${patchVersion}.patch.gz"
-ARG imageFile="${fileDate}-raspios-bullseye-${architecture}-{fullOrLite}.zip"
+ARG imageFile="${fileDate}-raspios-bullseye-${architecture}-${fullOrLite}${archiveType}"
 ARG imageURL="https://downloads.raspberrypi.org/raspios_${fullOrLite}_${architecture}/images/raspios_${fullOrLite}_${architecture}-${uploadDate}/${imageFile}"
 
 RUN apt-get update
@@ -56,7 +58,8 @@ RUN make Image modules dtbs
 WORKDIR /raspios
 RUN apt -y install
 RUN wget ${imageURL}
-RUN unzip ${imageFile} && rm ${imageFile}
+#RUN unzip ${imageFile} && rm ${imageFile}
+RUN unxz ${imageFile} && rm ${imageFile}
 RUN mkdir /raspios/mnt && mkdir /raspios/mnt/disk && mkdir /raspios/mnt/boot
 ADD build.sh ./
 ADD config.txt ./
