@@ -34,10 +34,13 @@ RUN wget ${patchURL}
 RUN gzip -cd /rpi-kernel/linux/patch-${patchVersion}.patch.gz | patch -p1 --verbose
 
 ENV KERNEL=kernel8
-ENV ARCH=arm64
-ENV CROSS_COMPILE=aarch64-linux-gnu-
+#ENV ARCH=arm64
+ENV ARCH=arm
+#ENV CROSS_COMPILE=aarch64-linux-gnu-
+ENV CROSS_COMPILE=arm-linux-gnueabihf
 
-RUN make bcm2711_defconfig
+#RUN make bcm2711_defconfig
+RUN make bcm2835_defconfig
 RUN ./scripts/config --disable CONFIG_VIRTUALIZATION
 RUN ./scripts/config --enable CONFIG_PREEMPT_RT
 RUN ./scripts/config --disable CONFIG_RCU_EXPERT
