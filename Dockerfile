@@ -17,7 +17,7 @@ ARG imageFile="2021-10-30-raspios-bullseye-armhf-lite.zip"
 ARG kernelBranch="rpi-$kernelVersion.$majorRevision.y"
 ARG patchVersion="$kernelVersion.$majorRevision.$minorRevision-rt$patchNumber"
 ARG patchVersionLocation="echo ../$patchVersion"
-ARG patchURL="https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/$older$kernelVersion.$majorRevision/patch-$patchVersion.patch.gz"
+ARG patchURL="https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/$kernelVersion.$majorRevision/$olderpatch-$patchVersion.patch.gz"
 ARG imageURL="https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2021-11-08/$imageFile"
 
 RUN apt-get update
