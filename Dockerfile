@@ -34,7 +34,7 @@ RUN wget ${patchURL}
 RUN gzip -cd /rpi-kernel/linux/patch-${patchVersion}.patch.gz | patch -p1 --verbose
 
 ENV KERNEL=kernel8
-ENV ARCH=${architecture}
+ENV ARCH=arm64
 ENV CROSS_COMPILE=aarch64-linux-gnu-
 
 RUN make bcm2711_defconfig
