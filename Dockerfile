@@ -18,7 +18,6 @@ ARG architecture="armhf"
 #
 ARG kernelBranch="rpi-${kernelVersion}.${majorRevision}.y"
 ARG patchVersion="${kernelVersion}.${majorRevision}.${minorRevision}-rt${patchNumber}"
-ARG patchVersionLocation="echo ../${patchVersion}"
 ARG patchURL="https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/${kernelVersion}.${majorRevision}/${older}patch-${patchVersion}.patch.gz"
 ARG imageFile="${fileDate}-raspios-bullseye-${architecture}-lite.zip"
 ARG imageURL="https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_${architecture}-${uploadDate}/${imageFile}"
@@ -28,15 +27,16 @@ RUN apt-get install -y git make gcc bison flex libssl-dev bc ncurses-dev kmod
 RUN apt-get install -y crossbuild-essential-${architecture}
 RUN apt-get install -y wget zip unzip fdisk nano curl xz-utils
 
-WORKDIR /rpi-kernel/linux
+WORKDIR /rpi-kernel
 RUN git clone https://github.com/raspberrypi/linux.git -b ${kernelBranch} --depth=1
+WORKDIR /rpi-kernel/linux
 RUN wget ${patchURL}
+RUN gzip -cd /rpi-kernel/linux/patch-${patchVersion}.patch.gz | patch -p1 --verbose
 
 ENV KERNEL=kernel8
 ENV ARCH=${architecture}
 ENV CROSS_COMPILE=aarch64-linux-gnu-
 
-RUN gzip -cd /rpi-kernel/linux/patch-${patchVersion}.patch.gz | patch -p1 --verbose
 RUN make bcm2711_defconfig
 RUN ./scripts/config --disable CONFIG_VIRTUALIZATION
 RUN ./scripts/config --enable CONFIG_PREEMPT_RT
