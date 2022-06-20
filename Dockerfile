@@ -11,7 +11,8 @@ ARG older="older/"
 #ARG older=""
 ARG uploadDate="2021-11-08"
 ARG fileDate="2021-10-30"
-ARG architecture="armhf"
+ARG architecture="arm64"
+ARG fullOrLite="lite"
 
 #
 # Don't change stuff below unless something is broken
@@ -19,8 +20,8 @@ ARG architecture="armhf"
 ARG kernelBranch="rpi-${kernelVersion}.${majorRevision}.y"
 ARG patchVersion="${kernelVersion}.${majorRevision}.${minorRevision}-rt${patchNumber}"
 ARG patchURL="https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/${kernelVersion}.${majorRevision}/${older}patch-${patchVersion}.patch.gz"
-ARG imageFile="${fileDate}-raspios-bullseye-${architecture}-lite.zip"
-ARG imageURL="https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_${architecture}-${uploadDate}/${imageFile}"
+ARG imageFile="${fileDate}-raspios-bullseye-${architecture}-{fullOrLite}.zip"
+ARG imageURL="https://downloads.raspberrypi.org/raspios_${fullOrLite}_${architecture}/images/raspios_${fullOrLite}_${architecture}-${uploadDate}/${imageFile}"
 
 RUN apt-get update
 RUN apt-get install -y git make gcc bison flex libssl-dev bc ncurses-dev kmod
@@ -34,13 +35,11 @@ RUN wget ${patchURL}
 RUN gzip -cd /rpi-kernel/linux/patch-${patchVersion}.patch.gz | patch -p1 --verbose
 
 ENV KERNEL=kernel8
-#ENV ARCH=arm64
-ENV ARCH=arm
-#ENV CROSS_COMPILE=aarch64-linux-gnu-
-ENV CROSS_COMPILE=arm-linux-gnueabihf
+ENV ARCH=${architecture}
+ENV CROSS_COMPILE=aarch64-linux-gnu-
 
 #RUN make bcm2711_defconfig
-RUN make bcm2835_defconfig
+RUN make bcmrpi3_defconfig
 RUN ./scripts/config --disable CONFIG_VIRTUALIZATION
 RUN ./scripts/config --enable CONFIG_PREEMPT_RT
 RUN ./scripts/config --disable CONFIG_RCU_EXPERT
