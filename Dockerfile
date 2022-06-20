@@ -1,35 +1,33 @@
 FROM ubuntu:20.04
 
-ENV LINUX_KERNEL_VERSION=5.10
-ENV LINUX_KERNEL_BRANCH=rpi-${LINUX_KERNEL_VERSION}.y
-
 ENV TZ=Europe/Copenhagen
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Set versions you want to use below:
-ARG majorVersion="5.10"
-ARG patchFileVersion="patch-5.10.87-rt59.patch.gz"
+ARG kernelVersion="5"
+ARG majorRevision="10"
+ARG minorRevision="87"
+ARG patchNumber="59"
+ARG older="older/"
+#ARG older=""
 ARG imageFile="2021-10-30-raspios-bullseye-armhf-lite.zip"
-ARG currentFileLocation="raspios_lite_armhf-2021-11-08"
 
 #
 # Don't change stuff below unless something is broken
 #
-ARG cloneVersion="rpi-$majorVersion.y"
-ARG imageBaseURL="https://downloads.raspberrypi.org/raspios_lite_armhf/images"
-ARG patchFileLocation="https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/$majorVersion/"
+ARG kernelBranch="rpi-$kernelVersion.$majorRevision.y"
+ARG patchVersion=$kernelVersion.$majorRevision.$minorRevision-rt$patchNumber
 ARG patchVersionLocation="echo ../$patchVersion"
-ARG patchPathFilename=$patchFileLocation$patchFileVersion
-ARG imagePathFileLocation=$imageBaseURL/$currentFileLocation/$imageFile
+ARG patchURL="https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/$older$kernelVersion.$majorRevision/patch-$patchVersion.patch.gz
+ARG imageURL="https://downloads.raspberrypi.org/raspios_lite_armhf/images/raspios_lite_armhf-2021-11-08/$imageFile"
 
 RUN apt-get update
 RUN apt-get install -y git make gcc bison flex libssl-dev bc ncurses-dev kmod
-RUN apt-get install -y crossbuild-essential-arm64
+RUN apt-get install -y crossbuild-essential-armhf
 RUN apt-get install -y wget zip unzip fdisk nano curl xz-utils
 
 WORKDIR /rpi-kernel
-RUN git clone https://github.com/raspberrypi/linux.git -b $cloneVersion --depth=1
-RUN wget $patchPathFilename
+RUN git clone https://github.com/raspberrypi/linux.git -b $kernelBranch --depth=1
+RUN wget $patchURL
 
 ENV KERNEL=kernel8
 ENV ARCH=arm64
@@ -47,7 +45,7 @@ RUN make Image modules dtbs
 
 WORKDIR /raspios
 RUN apt -y install
-RUN wget $imagePathFileLocation
+RUN wget $imageURL
 RUN unzip $imageFile && rm $imageFile
 RUN mkdir /raspios/mnt && mkdir /raspios/mnt/disk && mkdir /raspios/mnt/boot
 ADD build.sh ./
