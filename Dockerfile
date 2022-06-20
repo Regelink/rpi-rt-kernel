@@ -28,7 +28,7 @@ RUN apt-get install -y git make gcc bison flex libssl-dev bc ncurses-dev kmod
 RUN apt-get install -y crossbuild-essential-${architecture}
 RUN apt-get install -y wget zip unzip fdisk nano curl xz-utils
 
-WORKDIR /rpi-kernel
+WORKDIR /rpi-kernel/linux
 RUN git clone https://github.com/raspberrypi/linux.git -b ${kernelBranch} --depth=1
 RUN wget ${patchURL}
 
@@ -36,7 +36,7 @@ ENV KERNEL=kernel8
 ENV ARCH=${architecture}
 ENV CROSS_COMPILE=aarch64-linux-gnu-
 
-RUN gzip -cd ${patchVersionLocation} | patch -p1 --verbose
+RUN gzip -cd /rpi-kernel/linux/patch-${patchVersion}.patch.gz | patch -p1 --verbose
 RUN make bcm2711_defconfig
 RUN ./scripts/config --disable CONFIG_VIRTUALIZATION
 RUN ./scripts/config --enable CONFIG_PREEMPT_RT
