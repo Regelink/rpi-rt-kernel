@@ -4,22 +4,24 @@ ENV TZ=Europe/Copenhagen
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 ARG kernelVersion="5"
-#ARG majorRevision="10"
-#ARG minorRevision="87"
-#ARG patchNumber="59"
-ARG majorRevision="15"
-ARG minorRevision="32"
-ARG patchNumber="39"
+ARG majorRevision="10"
+ARG minorRevision="87"
+ARG patchNumber="59"
+#ARG majorRevision="15"
+#ARG minorRevision="32"
+#ARG patchNumber="39" # Fails on patching kernel/printk/printk.c
 ARG older="older/"
 #ARG older=""
-#ARG uploadDate="2021-11-08"
-#ARG fileDate="2021-10-30"
-ARG uploadDate="2022-04-07"
-ARG fileDate="2022-04-04"
+ARG uploadDate="2021-11-08"
+ARG fileDate="2021-10-30"
+#ARG uploadDate="2022-04-07"
+#ARG fileDate="2022-04-04"
 ARG architecture="arm64"
 ARG fullOrLite="lite"
-#ARG archiveType=".zip"
-ARG archiveType=".img.xz"
+ARG archiveType=".zip"
+ARG unarchiveTool="unzip"
+#ARG archiveType=".img.xz"
+#ARG unarchiveTool="unxz"
 
 #
 # Don't change stuff below unless something is broken
@@ -58,8 +60,7 @@ RUN make Image modules dtbs
 WORKDIR /raspios
 RUN apt -y install
 RUN wget ${imageURL}
-#RUN unzip ${imageFile} && rm ${imageFile}
-RUN unxz ${imageFile} && rm ${imageFile}
+RUN ${unarchiveTool} ${imageFile} && rm ${imageFile}
 RUN mkdir /raspios/mnt && mkdir /raspios/mnt/disk && mkdir /raspios/mnt/boot
 ADD build.sh ./
 ADD config.txt ./
