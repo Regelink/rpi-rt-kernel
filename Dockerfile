@@ -1,29 +1,54 @@
 FROM ubuntu:20.04
 
-ENV LINUX_KERNEL_VERSION=5.10
-ENV LINUX_KERNEL_BRANCH=rpi-${LINUX_KERNEL_VERSION}.y
-
 ENV TZ=Europe/Copenhagen
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
+ARG kernelVersion="5"
+ARG majorRevision="10"
+ARG minorRevision="87"
+ARG patchNumber="59"
+#ARG majorRevision="15"
+#ARG minorRevision="32"
+#ARG patchNumber="39" # Fails on patching kernel/printk/printk.c
+ARG older="older/"
+#ARG older=""
+ARG uploadDate="2021-11-08"
+ARG fileDate="2021-10-30"
+#ARG uploadDate="2022-04-07"
+#ARG fileDate="2022-04-04"
+ARG architecture="arm64"
+ARG fullOrLite="lite"
+ARG archiveType=".zip"
+ARG unarchiveTool="unzip"
+#ARG archiveType=".img.xz"
+#ARG unarchiveTool="unxz"
+
+#
+# Don't change stuff below unless something is broken
+#
+ARG kernelBranch="rpi-${kernelVersion}.${majorRevision}.y"
+ARG patchVersion="${kernelVersion}.${majorRevision}.${minorRevision}-rt${patchNumber}"
+ARG patchURL="https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/${kernelVersion}.${majorRevision}/${older}patch-${patchVersion}.patch.gz"
+ARG imageFile="${fileDate}-raspios-bullseye-${architecture}-${fullOrLite}${archiveType}"
+ARG imageURL="https://downloads.raspberrypi.org/raspios_${fullOrLite}_${architecture}/images/raspios_${fullOrLite}_${architecture}-${uploadDate}/${imageFile}"
+
 RUN apt-get update
 RUN apt-get install -y git make gcc bison flex libssl-dev bc ncurses-dev kmod
-RUN apt-get install -y crossbuild-essential-arm64
+RUN apt-get install -y crossbuild-essential-${architecture}
 RUN apt-get install -y wget zip unzip fdisk nano curl xz-utils
 
 WORKDIR /rpi-kernel
-RUN git clone https://github.com/raspberrypi/linux.git -b ${LINUX_KERNEL_BRANCH} --depth=1
+RUN git clone https://github.com/raspberrypi/linux.git -b ${kernelBranch} --depth=1
 WORKDIR /rpi-kernel/linux
-RUN export PATCH=$(curl -s https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/${LINUX_KERNEL_VERSION}/ | sed -n 's:.*<a href="\(.*\).patch.gz">.*:\1:p' | sort -V | tail -1) && \
-    echo "Downloading patch ${PATCH}" && \
-    curl https://mirrors.edge.kernel.org/pub/linux/kernel/projects/rt/${LINUX_KERNEL_VERSION}/${PATCH}.patch.gz --output ${PATCH}.patch.gz && \
-    gzip -cd /rpi-kernel/linux/${PATCH}.patch.gz | patch -p1 --verbose
+RUN wget ${patchURL}
+RUN gzip -cd /rpi-kernel/linux/patch-${patchVersion}.patch.gz | patch -p1 --verbose
 
 ENV KERNEL=kernel8
-ENV ARCH=arm64
+ENV ARCH=${architecture}
 ENV CROSS_COMPILE=aarch64-linux-gnu-
 
-RUN make bcm2711_defconfig
+#RUN make bcm2711_defconfig
+RUN make bcmrpi3_defconfig
 RUN ./scripts/config --disable CONFIG_VIRTUALIZATION
 RUN ./scripts/config --enable CONFIG_PREEMPT_RT
 RUN ./scripts/config --disable CONFIG_RCU_EXPERT
@@ -34,12 +59,8 @@ RUN make Image modules dtbs
 
 WORKDIR /raspios
 RUN apt -y install
-RUN export DATE=$(curl -s https://downloads.raspberrypi.org/raspios_lite_arm64/images/ | sed -n 's:.*raspios_lite_arm64-\(.*\)/</a>.*:\1:p' | tail -1) && \
-    export RASPIOS=$(curl -s https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-${DATE}/ | sed -n 's:.*<a href="\(.*\).xz">.*:\1:p' | tail -1) && \
-    echo "Downloading ${RASPIOS}.xz" && \
-    curl https://downloads.raspberrypi.org/raspios_lite_arm64/images/raspios_lite_arm64-${DATE}/${RASPIOS}.xz --output ${RASPIOS}.xz && \
-    xz -d ${RASPIOS}.xz
-
+RUN wget ${imageURL}
+RUN ${unarchiveTool} ${imageFile} && rm ${imageFile}
 RUN mkdir /raspios/mnt && mkdir /raspios/mnt/disk && mkdir /raspios/mnt/boot
 ADD build.sh ./
 ADD config.txt ./
